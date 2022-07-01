@@ -121,7 +121,6 @@ def create_single_instance(model_class:Type[models.Model], source_fields:dict,ct
             source_fields = processor(source_fields, ctx)
     for field_name,field_meta in meta["fields"].items():
         field_attr_value,is_ref = None,False
-        print("field",field_name)
         field = field_meta["field"]
         if field_name in source_fields:
             if "model" not in field_meta: #copy field
@@ -146,7 +145,6 @@ def create_single_instance(model_class:Type[models.Model], source_fields:dict,ct
                         field_attr_value = field.to_python(current_source_id)
                         is_ref = True
             kwargs[(field_name + '_id' ) if is_ref else field_name] = field_attr_value
-        print(kwargs)
 
     target_instance = get_objects(model_class).create(**kwargs)
     if post_process:
