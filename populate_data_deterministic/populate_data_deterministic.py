@@ -134,7 +134,7 @@ def create_single_instance(model_class:Type[models.Model], source_fields:dict,ct
                     field_attr_value = None
                     is_ref = True
                 else:
-                    source_id = source_fields[field_name+'_id']
+                    source_id = source_fields[field_name]
                     if source_id == 'None':
                         field_attr_value = None
                         is_ref = True
@@ -180,3 +180,4 @@ def create_instance(model_class:Type[models.Model], spec:list, param_processors=
         for post_processor in post_processors:
             post_processor(m, ispec, ctx)
         ctx["refs"][model_name][m.pk] = m
+
