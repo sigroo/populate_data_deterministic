@@ -119,6 +119,7 @@ def create_single_instance(model_class:Type[models.Model], source_fields:dict,ct
     if process_params:
         for processor in param_processors:
             source_fields = processor(source_fields, ctx)
+    
     for field_name,field_meta in meta["fields"].items():
         field_attr_value,is_ref = None,False
         field = field_meta["field"]
@@ -130,28 +131,34 @@ def create_single_instance(model_class:Type[models.Model], source_fields:dict,ct
                 else:
                     field_attr_value= field.to_python(source_fields[field_name])
             else:
-                if field_meta["setnull"] is True or references_map.get(field_meta["model"]) is None:
+                if field_meta["setnull"] is True or field_meta["model"] not in references_map:
                     field_attr_value = None
                     is_ref = True
                 else:
                     source_id = source_fields[field_name]
-                    if source_id == 'None':
-                        field_attr_value = None
-                        is_ref = True
+                    if source_id == 'None' or source_id is None:
+                        current_source_id = None
                     else:
                         current_source_id = references_map[field_meta["model"]].get(source_id)
-                        if current_source_id is None:
-                            return
+                    if current_source_id is not None:
                         field_attr_value = field.to_python(current_source_id)
-                        is_ref = True
+                    else:
+                        field_attr_value = None
+                    is_ref = True
+                    
             kwargs[(field_name + '_id' ) if is_ref else field_name] = field_attr_value
-
-    target_instance = get_objects(model_class).create(**kwargs)
+    try:
+        target_instance = get_objects(model_class).create(**kwargs)
+    except Exception as e:
+        print("unable to create instance for",source_fields,kwargs)
+        print(str(e))
+    else:
+        print("created instance for",source_fields,kwargs)
     if post_process:
         for post_processor in post_processors:
             post_processor(target_instance, source_fields,ctx)
 
-    references_map[meta["name"]][meta["pk"]["name"]] = target_instance.pk
+    references_map[meta["name"]][target_instance.pk] = target_instance.pk
 
 def create_instances_from_definition(model_class,spec,ctx,**kw):
     for single_spec in spec:
@@ -180,4 +187,3 @@ def create_instance(model_class:Type[models.Model], spec:list, param_processors=
         for post_processor in post_processors:
             post_processor(m, ispec, ctx)
         ctx["refs"][model_name][m.pk] = m
-
