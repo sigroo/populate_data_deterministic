@@ -109,6 +109,7 @@ def get_objects(model_class:Type[models.Model])->models.QuerySet:
 
 
 def create_single_instance(model_class:Type[models.Model], source_fields:dict,ctx:dict,prev_pk=None,param_processors=[], post_processors=[]):
+    print("trying to create instance from ",source_fields)
     meta = get_model_class_meta(model_class)
     kwargs = {}
     references_map = ctx["refs"]
@@ -152,6 +153,7 @@ def create_single_instance(model_class:Type[models.Model], source_fields:dict,ct
     except Exception as e:
         print("unable to create instance for",source_fields,kwargs)
         print(str(e))
+        return None
     else:
         print("created instance for",source_fields,kwargs)
     if post_process:
@@ -159,11 +161,14 @@ def create_single_instance(model_class:Type[models.Model], source_fields:dict,ct
             post_processor(target_instance, source_fields,ctx)
 
     references_map[meta["name"]][target_instance.pk] = target_instance.pk
+    return target_instance
 
 def create_instances_from_definition(model_class,spec,ctx,**kw):
+    instances = []
     for single_spec in spec:
-        create_single_instance(model_class,single_spec,ctx,**kw)
-
+        instance = create_single_instance(model_class,single_spec,ctx,**kw)
+        instances.append(instance)
+    return instances
 
 def create_instance_from_dump(spec, ctx,**kw):
     model = get_model_from_string(spec["model"])
