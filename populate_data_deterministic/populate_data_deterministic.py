@@ -2,11 +2,10 @@ import inspect
 import json
 from collections import defaultdict
 from functools import lru_cache
-from typing import List, TypedDict, Type, Dict, Union, TYPE_CHECKING
+from typing import List, TypedDict, Type, Dict, Union
 
-if TYPE_CHECKING:
-    from django.apps import apps
-    from django.db import models
+from django.apps import apps
+from django.db import models
 
 GlobalRefMap = Dict[str, Dict[int, Union[int, None]]]
 
@@ -121,7 +120,7 @@ def create_single_instance(model_class: Type[models.Model], source_fields: dict,
     meta = get_model_class_meta(model_class)
     kwargs = {}
     references_map = ctx["refs"]
-    processed_spec = create_spec(source_fields, ctx, meta=meta)
+    processed_spec = create_spec(source_fields, ctx)
     source_fields = processed_spec
     process_params = len(param_processors) > 0
     post_process = len(post_processors) > 0
@@ -166,7 +165,7 @@ def create_single_instance(model_class: Type[models.Model], source_fields: dict,
         print("created instance for", source_fields, kwargs)
     if post_process:
         for post_processor in post_processors:
-            post_processor(target_instance, source_fields, ctx)
+            post_processor(target_instance, source_fields, ctx, meta=meta)
 
     references_map[meta["name"]][target_instance.pk] = target_instance.pk
     return target_instance
