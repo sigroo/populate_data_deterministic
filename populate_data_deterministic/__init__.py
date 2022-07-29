@@ -5,4 +5,4 @@ from .populate_data_deterministic import create_spec, create_instances_from_defi
 
 __author__ = """Arun Tigeraniya"""
 __email__ = 'tigeraniya@gmail.com'
-__version__ = '0.2.5'
+__version__ = '0.2.6'
