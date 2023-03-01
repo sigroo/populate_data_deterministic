@@ -115,7 +115,7 @@ def get_objects(model_class: Type[models.Model]) -> models.QuerySet:
 
 
 def create_single_instance(model_class: Type[models.Model], source_fields: dict, ctx: dict, prev_pk=None,
-                           param_processors=[], post_processors=[]):
+                           param_processors=[], post_processors=[],**kw):
     print("trying to create instance from ", source_fields)
     meta = get_model_class_meta(model_class)
     kwargs = {}
@@ -126,7 +126,7 @@ def create_single_instance(model_class: Type[models.Model], source_fields: dict,
     post_process = len(post_processors) > 0
     if process_params:
         for processor in param_processors:
-            source_fields = processor(source_fields, ctx, meta=meta)
+            source_fields = processor(source_fields, ctx, meta=meta,**kw)
 
     for field_name, field_meta in meta["fields"].items():
         field_attr_value, is_ref = None, False
@@ -165,7 +165,7 @@ def create_single_instance(model_class: Type[models.Model], source_fields: dict,
         print("created instance for", source_fields, kwargs)
     if post_process:
         for post_processor in post_processors:
-            post_processor(target_instance, source_fields, ctx, meta=meta)
+            post_processor(target_instance, source_fields, ctx, meta=meta,**kw)
 
     references_map[meta["name"]][target_instance.pk] = target_instance.pk
     return target_instance
